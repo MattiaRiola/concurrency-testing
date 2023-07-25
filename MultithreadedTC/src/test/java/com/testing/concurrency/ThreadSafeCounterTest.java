@@ -40,6 +40,6 @@ public class ThreadSafeCounterTest extends MultithreadedTestCase {
                 ;
         threadInfoMap.keySet().stream()
                 .sorted(threadInfoComparator)
-                .forEach(System.out::println);
+                .forEach(x -> System.out.println(x+":"+threadInfoMap.get(x)));
     }
 }
