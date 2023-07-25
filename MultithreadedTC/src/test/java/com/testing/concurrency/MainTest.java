@@ -3,6 +3,8 @@ package com.testing.concurrency;
 
 import org.junit.Test;
 
+import java.util.HashMap;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -18,8 +20,8 @@ public class MainTest
     public void shouldAnswerWithTrue()
     {
         var counter = new MyCounter();
-        counter.increment();
-        counter.increment();
+        counter.increment(new HashMap<>());
+        counter.increment(new HashMap<>());
         assertEquals(2, counter.getCount());
     }
 }
