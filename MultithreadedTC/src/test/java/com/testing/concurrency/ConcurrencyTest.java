@@ -1,22 +1,14 @@
 package com.testing.concurrency;
 
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.AttributedString;
-import org.jline.utils.Display;
-import org.junit.Test;
 
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
+import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.testing.concurrency.ConcurrencyTestPrinter.*;
-import static java.util.Arrays.asList;
+import static com.testing.concurrency.ConcurrencyTestPrinter.printProgressBar;
 
 public class ConcurrencyTest extends MultithreadedTestCase {
 
@@ -43,8 +35,6 @@ public class ConcurrencyTest extends MultithreadedTestCase {
 
     @Test
     public void multipleTests() throws IOException {
-        Terminal terminal = TerminalBuilder.terminal();
-        Display display = new Display(terminal, true);
         int passed = 0;
         int failed = 0;
         int totoalAttempts = 1000;
@@ -66,7 +56,7 @@ public class ConcurrencyTest extends MultithreadedTestCase {
     }
 
 
-    public void testThreadUnsafeCounter() throws Throwable {
+    private void testThreadUnsafeCounter() throws Throwable {
         TestFramework.runManyTimes(new ConcurrencyTest(), 400);
     }
 
