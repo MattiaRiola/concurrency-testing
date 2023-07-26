@@ -49,7 +49,7 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
     public void thread1() throws InterruptedException {
         var course1 = List.of(courseRepository.findByName("Course 1").get());
         for (int i = 0; i < 10; i++) {
-            createPersonAndEnrollIt(course1, i);
+            createPersonAndEnrollIt(course1, new Person("Person "+ i,20+ i));
         }
     }
 
@@ -57,30 +57,47 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
         List<Course> courses = courseRepository.findAll();
 
         for (int i = 10; i < 20; i++) {
-            createPersonAndEnrollIt(courses, i);
+            createPersonAndEnrollIt(courses, new Person("Person "+ i,20+ i));
         }
+    }
 
-
-
+    public void thread3() throws InterruptedException{
+        System.out.println("Thread 3");
+        Course course = courseRepository.findByName("Course 1").get();
+        List<String> expelledFromCourse1 = new LinkedList<>();
+        for (int i = 5; i < 15; i++) {
+            personRepository.findByName("Person "+i).ifPresent(p->{
+                course.expelPerson(p);
+                personRepository.save(p);
+                expelledFromCourse1.add(p.getName());
+            });
+        }
+        System.out.println("Expelled from course 1: " + expelledFromCourse1);
     }
 
 
-    public void createPersonAndEnrollIt(List<Course> courses, int i) throws InterruptedException {
-        Person p = personRepository.save(new Person("Person "+ i,20+ i));
+    public void createPersonAndEnrollIt(List<Course> courses, Person p) throws InterruptedException {
         Thread.sleep(100);
         for (Course course : courses) {
             course.enrollPerson(p);
         }
+        personRepository.save(p);
     }
 
     @Override
     public void finish() {
-        personRepository.findAll().forEach(
-                p->{
-                    if(p.getCourses().contains(courseRepository.findByName("Course 1").get()))
-                        System.out.println(p + " was not expelled");
-                }
-        );
+        List<Person> people = personRepository.findAll();
+        people.stream().filter(p->p.getCourses().isEmpty()).forEach(p->{
+            System.out.println("Person " + p.getName() + " has no courses");
+        });
+        long numOfExpelledPeople = people.stream()
+                .filter( p->
+                        p.getCourses().stream()
+                                .anyMatch(c->c.getName().equals("Course 1"))
+                ).count();
+
+        System.out.println("Number of people expelled from course 1: " + numOfExpelledPeople);
+
         personRepository.findAll().forEach(
                 System.out::println
         );

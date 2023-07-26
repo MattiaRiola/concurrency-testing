@@ -7,10 +7,10 @@ import org.hibernate.proxy.HibernateProxy;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@ToString
 @RequiredArgsConstructor
 @Entity
 @Table(name = "person")
@@ -23,7 +23,7 @@ public class Person {
     private String name;
     private Integer age;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "person_enrolled_courses",
             joinColumns = @JoinColumn(name = "id"))
     private Set<Course> courses = new LinkedHashSet<>();
@@ -48,5 +48,16 @@ public class Person {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+                "id = " + id + ", " +
+                "name = " + name + ", " +
+                "age = " + age +
+                "courses = " + courses.stream().map(Course::getName).collect(Collectors.toSet())
+                + ")"
+                ;
     }
 }

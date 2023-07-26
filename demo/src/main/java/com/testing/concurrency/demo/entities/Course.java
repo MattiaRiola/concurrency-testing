@@ -9,10 +9,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@ToString
 @RequiredArgsConstructor
 @Entity
 @Table(name = "course")
@@ -26,7 +26,7 @@ public class Course {
     private int credits;
     private int hours;
 
-    @ManyToMany(mappedBy = "courses", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "courses", fetch = FetchType.EAGER)
     private Set<Person> people = new HashSet<>();
 
     public Course(String name, int credits, int hours) {
@@ -66,5 +66,16 @@ public class Course {
         boolean changes = this.people.addAll(people);
         people.forEach(p->p.getCourses().add(this));
         return changes;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+                "id = " + id + ", " +
+                "name = " + name + ", " +
+                "credits = " + credits + ", " +
+                "hours = " + hours + ")" +
+                "people = " + people.stream().map(Person::getName).collect(Collectors.toSet())
+                ;
     }
 }
