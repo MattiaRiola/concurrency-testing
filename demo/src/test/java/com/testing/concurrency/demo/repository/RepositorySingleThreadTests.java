@@ -25,7 +25,13 @@ class RepositorySingleThreadTests {
 	@BeforeEach
 	void init() {
 		System.out.println("Before all tests");
+		//clean
+		List<Course> oldCourses = courseRepository.findAll();
+		oldCourses.forEach(Course::expelEveryone);
+		courseRepository.saveAll(oldCourses);
 		courseRepository.deleteAll();
+		personRepository.deleteAll();
+		//init
 		courseRepository.save(new Course("Course 1",6,30));
 		courseRepository.save(new Course("Course 2",8,40));
 	}
@@ -34,6 +40,10 @@ class RepositorySingleThreadTests {
 	@AfterEach
 	void tearDown() {
 		System.out.println("After all tests");
+
+		List<Course> oldCourses = courseRepository.findAll();
+		oldCourses.forEach(Course::expelEveryone);
+		courseRepository.saveAll(oldCourses);
 		personRepository.deleteAll();
 		courseRepository.deleteAll();
 	}
@@ -44,7 +54,7 @@ class RepositorySingleThreadTests {
 		Person p2 = personRepository.save(new Person("Person 2",30));
 		List<Course> courses = courseRepository.findAll();
 		courses.forEach(c->c.enrollPerson(p1));
-		courseRepository.findById(1L).ifPresent(c->c.enrollPerson(p2));
+		courseRepository.findByName("Course 1").ifPresent(c->c.enrollPerson(p2));
 
 		personRepository.save(p1);
 		personRepository.save(p2);
