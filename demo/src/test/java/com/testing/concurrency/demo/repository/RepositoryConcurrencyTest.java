@@ -31,6 +31,8 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
     @Autowired
     private PersonRepository personRepository;
 
+    int execution = 0;
+
     public void setCourseRepository(CourseRepository courseRepository) {
         this.courseRepository = courseRepository;
     }
@@ -42,6 +44,8 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
     @Override
     public void initialize() {
         System.out.println("Before all tests");
+        System.out.println("Execution "+execution);
+        execution++;
         initDB();
     }
 
@@ -72,7 +76,6 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
     }
 
     public void thread1(){
-        System.out.println("Thread 1 start");
         List<Person> people = personRepository.findAll();
         courseRepository.findByName("Course 1").ifPresent(course -> {
             people.forEach(p -> {
@@ -83,11 +86,9 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
             courseRepository.save(course);
             System.out.println("Saved course "+course.getName());
         });
-        System.out.println("Thread 1 end");
     }
 
     public void thread2(){
-        System.out.println("Thread 2 start");
         List<Person> people = personRepository.findAll();
         courseRepository.findByName("Course 2").ifPresent(course -> {
             people.forEach(p -> {
@@ -98,11 +99,9 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
             courseRepository.save(course);
             System.out.println("Saved course "+course.getName());
         });
-        System.out.println("Thread 2 end");
     }
 
     public void thread3(){
-        System.out.println("Thread 3 start");
         List<Person> people = personRepository.findAll();
         courseRepository.findByName("Course 3").ifPresent(course -> {
             people.forEach(p -> {
@@ -113,7 +112,6 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
             courseRepository.save(course);
             System.out.println("Saved course "+course.getName());
         });
-        System.out.println("Thread 3 end");
     }
 
     @Override
@@ -145,11 +143,9 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
 
     @Test
     public void testRepositoryWithMTC() throws Throwable {
-        RepositoryConcurrencyTest test = new RepositoryConcurrencyTest();
-        //Autowired fields must be set manually after the constructor
-        test.setPersonRepository(personRepository);
-        test.setCourseRepository(courseRepository);
-        TestFramework.runManyTimes(test, 3);
+        this.setTrace(true);
+        System.setProperty("tunit.runLimit","20");
+        TestFramework.runManyTimes(this, 2000);
 
     }
 }
