@@ -26,7 +26,9 @@ public class Course {
     private int credits;
     private int hours;
 
-    @ManyToMany(mappedBy = "courses", fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "person_enrolled_courses",
+            joinColumns = @JoinColumn(name = "id"))
     private Set<Person> people = new HashSet<>();
 
     public Course(String name, int credits, int hours) {
@@ -40,11 +42,21 @@ public class Course {
         person.getCourses().add(this);
         return added;
     }
+    public boolean enrollPeople(List<Person> people) {
+        boolean changes = this.people.addAll(people);
+        people.forEach(p->p.getCourses().add(this));
+        return changes;
+    }
     public boolean expelPerson(Person p) {
         System.out.println("Expelling person " + p.getName() + " from course " + this.getName());
         boolean isExpelled = this.people.remove(p);
         p.getCourses().remove(this);
         return isExpelled;
+    }
+
+    public void expelEveryone(){
+        this.people.forEach(p->p.getCourses().remove(this));
+        this.people.clear();
     }
 
     @Override
@@ -61,12 +73,6 @@ public class Course {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
-    }
-
-    public boolean enrollPeople(List<Person> people) {
-        boolean changes = this.people.addAll(people);
-        people.forEach(p->p.getCourses().add(this));
-        return changes;
     }
 
     @Override

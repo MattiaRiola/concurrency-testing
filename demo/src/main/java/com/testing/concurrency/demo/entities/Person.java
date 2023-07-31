@@ -23,9 +23,7 @@ public class Person {
     private String name;
     private Integer age;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "person_enrolled_courses",
-            joinColumns = @JoinColumn(name = "id"))
+    @ManyToMany(mappedBy = "people", fetch = FetchType.EAGER)
     private Set<Course> courses = new LinkedHashSet<>();
 
     public Person(String name, int age) {
