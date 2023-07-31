@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.BufferedOutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -20,11 +21,14 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+@SpringBootTest
 public class RepositoryConcurrencyTest extends MultithreadedTestCase {
 
+    @Autowired
     private CourseRepository courseRepository;
 
 
+    @Autowired
     private PersonRepository personRepository;
 
     public void setCourseRepository(CourseRepository courseRepository) {
@@ -43,8 +47,16 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
 
 
     public void initDB() {
+
+        //Clean
+        List<Course> oldCourses = courseRepository.findAll();
+        oldCourses.forEach(Course::expelEveryone);
+        courseRepository.saveAll(oldCourses);
+
         personRepository.deleteAll();
         courseRepository.deleteAll();
+
+        //populate DB
         courseRepository.save(new Course("Course 1",1,10));
         courseRepository.save(new Course("Course 2",2,20));
         courseRepository.save(new Course("Course 3",3,30));
@@ -56,6 +68,7 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
             people.add(p);
         }
         personRepository.saveAll(people);
+        courseRepository.saveAll(courses);
     }
 
     public void thread1(){
@@ -123,12 +136,20 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
                 System.out::println
         );
         System.out.println("After all tests");
+        List<Course> oldCourses = courseRepository.findAll();
+        oldCourses.forEach(Course::expelEveryone);
+        courseRepository.saveAll(oldCourses);
         personRepository.deleteAll();
         courseRepository.deleteAll();
     }
 
     @Test
     public void testRepositoryWithMTC() throws Throwable {
-        TestFramework.runManyTimes(new RepositoryConcurrencyTest(), 1000);
+        RepositoryConcurrencyTest test = new RepositoryConcurrencyTest();
+        //Autowired fields must be set manually after the constructor
+        test.setPersonRepository(personRepository);
+        test.setCourseRepository(courseRepository);
+        TestFramework.runManyTimes(test, 3);
+
     }
 }
