@@ -15,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -41,62 +43,81 @@ public class RepositoryConcurrencyTest extends MultithreadedTestCase {
 
 
     public void initDB() {
+        personRepository.deleteAll();
         courseRepository.deleteAll();
-        courseRepository.save(new Course("Course 1",6,30));
-        courseRepository.save(new Course("Course 2",8,40));
-    }
-
-    public void thread1() throws InterruptedException {
-        var course1 = List.of(courseRepository.findByName("Course 1").get());
-        for (int i = 0; i < 10; i++) {
-            createPersonAndEnrollIt(course1, new Person("Person "+ i,20+ i));
-        }
-    }
-
-    public void thread2() throws InterruptedException {
+        courseRepository.save(new Course("Course 1",1,10));
+        courseRepository.save(new Course("Course 2",2,20));
+        courseRepository.save(new Course("Course 3",3,30));
         List<Course> courses = courseRepository.findAll();
-
-        for (int i = 10; i < 20; i++) {
-            createPersonAndEnrollIt(courses, new Person("Person "+ i,20+ i));
+        List<Person> people = new LinkedList<>();
+        for (int i = 0; i < 5; i++) {
+            Person p = new Person("Person "+ i,20+ i);
+            courses.forEach(course -> course.enrollPerson(p));
+            people.add(p);
         }
+        personRepository.saveAll(people);
     }
 
-    public void thread3() throws InterruptedException{
-        System.out.println("Thread 3");
-        Course course = courseRepository.findByName("Course 1").get();
-        List<String> expelledFromCourse1 = new LinkedList<>();
-        for (int i = 5; i < 15; i++) {
-            personRepository.findByName("Person "+i).ifPresent(p->{
+    public void thread1(){
+        System.out.println("Thread 1 start");
+        List<Person> people = personRepository.findAll();
+        courseRepository.findByName("Course 1").ifPresent(course -> {
+            people.forEach(p -> {
                 course.expelPerson(p);
                 personRepository.save(p);
-                expelledFromCourse1.add(p.getName());
             });
-        }
-        System.out.println("Expelled from course 1: " + expelledFromCourse1);
+            System.out.println("Saving "+course.getName()+" after the expulsions");
+            courseRepository.save(course);
+            System.out.println("Saved course "+course.getName());
+        });
+        System.out.println("Thread 1 end");
     }
 
+    public void thread2(){
+        System.out.println("Thread 2 start");
+        List<Person> people = personRepository.findAll();
+        courseRepository.findByName("Course 2").ifPresent(course -> {
+            people.forEach(p -> {
+                course.expelPerson(p);
+                personRepository.save(p);
+            });
+            System.out.println("Saving "+course.getName()+" after the expulsions");
+            courseRepository.save(course);
+            System.out.println("Saved course "+course.getName());
+        });
+        System.out.println("Thread 2 end");
+    }
 
-    public void createPersonAndEnrollIt(List<Course> courses, Person p) throws InterruptedException {
-        Thread.sleep(100);
-        for (Course course : courses) {
-            course.enrollPerson(p);
-        }
-        personRepository.save(p);
+    public void thread3(){
+        System.out.println("Thread 3 start");
+        List<Person> people = personRepository.findAll();
+        courseRepository.findByName("Course 3").ifPresent(course -> {
+            people.forEach(p -> {
+                course.expelPerson(p);
+                personRepository.save(p);
+            });
+            System.out.println("Saving "+course.getName()+" after the expulsions");
+            courseRepository.save(course);
+            System.out.println("Saved course "+course.getName());
+        });
+        System.out.println("Thread 3 end");
     }
 
     @Override
     public void finish() {
         List<Person> people = personRepository.findAll();
-        people.stream().filter(p->p.getCourses().isEmpty()).forEach(p->{
-            System.out.println("Person " + p.getName() + " has no courses");
-        });
-        long numOfExpelledPeople = people.stream()
-                .filter( p->
-                        p.getCourses().stream()
-                                .anyMatch(c->c.getName().equals("Course 1"))
-                ).count();
 
-        System.out.println("Number of people expelled from course 1: " + numOfExpelledPeople);
+        var courses = courseRepository.findAll();
+        for (Course course : courses) {
+            Set<Person> notExpelledPeople = people.stream()
+                    .filter( p->
+                            p.getCourses().stream()
+                                    .anyMatch(c->c.getName().equals(course.getName()))
+                    ).collect(Collectors.toSet());
+            assertTrue("Not expelled people should be empty, expelled people from " +
+                            "course " + course.getName() + " are: " + notExpelledPeople,
+                            notExpelledPeople.isEmpty());
+        }
 
         personRepository.findAll().forEach(
                 System.out::println

@@ -25,12 +25,12 @@ public class RepositoryConcurrencyTestWrapper {
     }
 
     @Test
-    public void testRepositoryConcurrency() throws Throwable {
+    public void testRepositoryWithMultiThread() throws Throwable {
         var test = new RepositoryConcurrencyTest();
         test.setPersonRepository(personRepository);
         test.setCourseRepository(courseRepository);
         test.initDB();
-        TestFramework.runManyTimes(test, 10);
+        TestFramework.runManyTimes(test, 100);
     }
 
 }
