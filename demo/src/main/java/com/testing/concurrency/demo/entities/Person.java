@@ -53,10 +53,10 @@ public class Person {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "(" +
-                "id = " + id + ", " +
-                "name = " + name + ", " +
-                "age = " + age +
-                "courses = " + courses.stream().map(Course::getName).collect(Collectors.toSet())
+                "id = " + id +
+                ", name = " + name +
+                ", age = " + age +
+                ", courses = " + courses.stream().map(Course::getName).collect(Collectors.toSet())
                 + ")"
                 ;
     }

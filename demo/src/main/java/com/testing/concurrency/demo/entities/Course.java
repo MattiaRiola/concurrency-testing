@@ -41,6 +41,7 @@ public class Course {
         return added;
     }
     public boolean expelPerson(Person p) {
+        System.out.println("Expelling person " + p.getName() + " from course " + this.getName());
         boolean isExpelled = this.people.remove(p);
         p.getCourses().remove(this);
         return isExpelled;
