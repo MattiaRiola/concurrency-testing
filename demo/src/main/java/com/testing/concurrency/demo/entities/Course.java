@@ -5,17 +5,16 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
 @Entity
-@Table(name = "course")
+@Table(name = "course", uniqueConstraints = {
+        @UniqueConstraint(name = "uc_course_name", columnNames = {"name"})
+})
 public class Course {
     @Id
     @Column(name = "id", nullable = false)
@@ -30,6 +29,10 @@ public class Course {
     @JoinTable(name = "person_enrolled_courses",
             joinColumns = @JoinColumn(name = "id"))
     private Set<Person> people = new HashSet<>();
+
+
+    @OneToMany
+    private Set<Exam> exams = new LinkedHashSet<>();
 
     public Course(String name, int credits, int hours) {
         this.name = name;

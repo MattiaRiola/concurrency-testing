@@ -13,7 +13,9 @@ import java.util.stream.Collectors;
 @Setter
 @RequiredArgsConstructor
 @Entity
-@Table(name = "person")
+@Table(name = "person", uniqueConstraints = {
+        @UniqueConstraint(name = "uc_person_name", columnNames = {"name"})
+})
 public class Person {
     @Id
     @Column(name = "id", nullable = false)
@@ -25,6 +27,9 @@ public class Person {
 
     @ManyToMany(mappedBy = "people", fetch = FetchType.EAGER)
     private Set<Course> courses = new LinkedHashSet<>();
+
+    @OneToMany
+    private Set<Exam> exams = new LinkedHashSet<>();
 
     public Person(String name, int age) {
         this.name = name;
